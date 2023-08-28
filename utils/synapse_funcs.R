@@ -152,20 +152,20 @@ get_ranked_submissions <- function(syn, query) {
 get_scores <- function(syn, sub_df) {
   # validate if any valid submission to prevent from failing
   stopifnot(nrow(sub_df) > 0)
-  #stopifnot("accuracy" %in% colnames(sub_df)
-  #stopifnot("submission_scores" %in% colnames(sub_df))
-  
+
+  #score_id <- colnames(sub_df)
   # create df with the accuracy and submitter ids grouped by the submitter id to determine max accuracy
-  score_id <- sub_df[, c("accuracy", "submitterid")] %>%
-  group_by(submitterid) %>%
-  arrange(submitterid, accuracy) %>%
-    mutate(overall_rank = max(accuracy)
-    )
+  
+  score_id <- sub_df[, c("admin_folder", "accuracy", "team", "submitterid","dockerrepositoryname")] %>%
+  arrange(desc(accuracy))
+#   group_by(submitterid) %>%
+#   arrange(submitterid, accuracy) %>%
+#   )
   
   # get the top accuracy results and remove all others
-  score_id <- score_id[score_id$accuracy == score_id$overall_rank, ] %>%
-  distinct() %>%
-  arrange(desc(overall_rank))
+  #score_id <- score_id[score_id$accuracy == score_id$overall_rank, ] #%>%
+  #distinct() %>%
+  #arrange(desc(overall_rank))
 
   #remove unneccesary columns
   #score_id <- score_id %>% select(-(accuracy))
