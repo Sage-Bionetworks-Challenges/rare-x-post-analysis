@@ -19,7 +19,7 @@ query <- stringr::str_glue(
         status = 'ACCEPTED'
         AND submission_status = 'SCORED'
         AND accuracy IS NOT NULL
-        AND team <> 'vchung'
+        AND submitterid <> 'vchung'
     GROUP BY submitterid
     ORDER BY accuracy
     "
