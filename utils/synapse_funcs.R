@@ -145,6 +145,9 @@ get_ranked_submissions <- function(syn, query) {
     mutate(across(everything(), as.character),
            team = as.character(sapply(submitterid, get_name, syn = syn))) %>%
     arrange(desc(accuracy))
+  
+  # add primary rank column for future Bayes analysis
+  sub_df$primary_rank = seq(1, by = 1, length.out = nrow(sub_df))
   return(sub_df)
 }
 
