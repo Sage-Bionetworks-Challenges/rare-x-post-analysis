@@ -31,6 +31,8 @@ sub_df <- get_ranked_submissions(syn, query)
     
 saveRDS(sub_df, file.path(data_dir, str_glue("final_submissions_task2.rds")))
 
+# human readable file ranking the accuracy results
+write.table(sub_df, "/Users/mdiaz/rare-x-post-analysis/data/ranked.txt")
 
 # Retrieve all scores -----------------------------------------------------
 # download all test case's score each submission
