@@ -12,8 +12,6 @@ sub_df <- readRDS(
   file.path(data_dir, str_glue("final_submissions_task{task_n}.rds"))
 )
 
-# message("!!!!!!!!!!!!! Output files of each submission will have size of ~30G")
-# if (interactive()) utils::askYesNo("Are you sure to continue?")
 
 for (n in 1:nrow(sub_df)) { 
   

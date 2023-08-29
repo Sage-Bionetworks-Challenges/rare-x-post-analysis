@@ -13,13 +13,15 @@ query <- stringr::str_glue(
         MAX(accuracy) AS accuracy,
         dockerrepositoryname,
         dockerdigest,
-        CONCAT(admin_folder, '/predictions.tsv') AS admin_folder
+        admin_folder,
+        prediction_fileid
     FROM {view_id}
     WHERE
         status = 'ACCEPTED'
         AND submission_status = 'SCORED'
         AND accuracy IS NOT NULL
-        AND submitterid <> 'vchung'
+        AND submitterid <> 3393723 
+        AND submitterid <> 3463839
     GROUP BY submitterid
     ORDER BY accuracy
     "

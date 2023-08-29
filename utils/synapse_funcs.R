@@ -156,7 +156,7 @@ get_scores <- function(syn, sub_df) {
   #score_id <- colnames(sub_df)
   # create df with the accuracy and submitter ids grouped by the submitter id to determine max accuracy
   
-  score_id <- sub_df[, c("admin_folder", "accuracy", "team", "submitterid","dockerrepositoryname")] %>%
+  score_id <- sub_df[, c("id", "team", "submitterid", "accuracy", "dockerrepositoryname", "dockerdigest", "admin_folder", "prediction_fileid")] %>%
   arrange(desc(accuracy))
 #   group_by(submitterid) %>%
 #   arrange(submitterid, accuracy) %>%
