@@ -20,8 +20,6 @@ query <- stringr::str_glue(
         status = 'ACCEPTED'
         AND submission_status = 'SCORED'
         AND accuracy IS NOT NULL
-        AND submitterid <> 3393723 
-        AND submitterid <> 3463839
     GROUP BY submitterid
     ORDER BY accuracy
     "

@@ -18,7 +18,7 @@ simple_bootstrap <- function(.data,
       mutate(bs_n = n)
     
     return(rs_data)
-  }, mc.cores = ncores) #%>% bind_rows()
+  }, mc.cores = ncores) %>% bind_rows()
   
   return(bs_results)
 }

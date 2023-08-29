@@ -2,8 +2,8 @@ source("utils/setup.R")
 source("utils/bootstrap_funcs.R")
 source("utils/plot_funcs.R")
 
-task_n <- 1
-metrics <- metrics_lookup[[task_n]]
+task_n <- 2
+metrics <- metrics_lookup[[1]]
 
 
 # Reading submission data -------------------------------------------------
@@ -16,11 +16,11 @@ scores_df <- readRDS(score_data)
 
 
 # label model names -------------------------------------------------------
-baseline_magic <- "9732066"
-baseline_deepimpute <- "9732074"
+baseline_magic <- "9732066"  #ID of Sage baseline model submitted to eval queue during dry run
+#baseline_deepimpute <- "9732074"
 top_performer <- sub_df$id[1]
 sub_df <- sub_df %>% mutate(model_name = case_when(id == baseline_magic ~ "Baseline MAGIC",
-                                                   id == baseline_deepimpute ~ "Baseline DeepImpute",
+                                                   #id == baseline_deepimpute ~ "Baseline DeepImpute",
                                                    TRUE ~ as.character(team)))
 
 
@@ -102,7 +102,7 @@ if (F) {
     theme(legend.position = "bottom", legend.direction = "horizontal", legend.box.background = element_rect(colour = "black"))
   
   
-  pdf("all_gene_scores_sc1.pdf", width = 20, height = 12)
+  pdf("all_prediction_accuracy.pdf", width = 20, height = 12)
   sc1_genes_p
   dev.off()
 }
