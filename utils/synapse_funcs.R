@@ -153,13 +153,42 @@ get_ranked_submissions <- function(syn, query) {
 
 
 # Retrieving predictions from submission view table --------------------------
-get_scores <- function(syn, sub_df) {
+get_scores <- function(syn, sub_df, query) {
   # validate if any valid submission to prevent from failing
   stopifnot(nrow(sub_df) > 0)
   stopifnot("prediction_fileid" %in% colnames(sub_df))
 
-  # read all valid predictions
+  if(missing(query)) {
+
+    # read all valid scores results
+    all_scores <- lapply(1:nrow(sub_df), function(sub_n) {
+      #get the prediction files
+      score_id <- sub_df$prediction_fileid[sub_n]
+
+      # read all test case scores for each submission
+      score_df <- syn$get(score_id)$path %>%
+        data.table::fread(data.table = FALSE, verbose = FALSE) %>%
+        mutate(
+          id = sub_df$id[sub_n],
+          submitterid = sub_df$submitterid[sub_n],
+          team = sub_df$team[sub_n]
+        )
+      return(score_df)
+    }) %>% bind_rows()
+  }
+  else {
+    # read all valid accuracy data
   all_scores <- lapply(1:nrow(sub_df), function(sub_n) {
+    # download the submissions ordered by accuracy rank
+    base_df <- syn$tableQuery(query)$asDataFrame() %>%
+      mutate(across(everything(), as.character),
+            team = as.character(sapply(submitterid, get_name, syn = syn))) %>%
+      arrange(desc(accuracy))
+
+    # add primary rank column for future Bayes analysis
+    base_df$primary_rank = seq(1, by = 1, length.out = nrow(sub_df))
+
+    #get the prediction files
     score_id <- sub_df$prediction_fileid[sub_n]
 
     # read all test case scores for each submission
@@ -170,9 +199,12 @@ get_scores <- function(syn, sub_df) {
         submitterid = sub_df$submitterid[sub_n],
         team = sub_df$team[sub_n]
       )
+    
+    #join dataframes to get accuracy and rank
+    full_df <- merge(x = base_df, y = score_df, by = "id")
     return(score_df)
   }) %>% bind_rows()
-
+  }
 }
 
 
