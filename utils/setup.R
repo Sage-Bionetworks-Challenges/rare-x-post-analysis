@@ -12,7 +12,7 @@ syn$login(silent = TRUE)
 view_id <- "syn52141680" #Task submissions Table synID
 eval_id <- "9615381" #Task eval queue ID in parentheses
 gs_id <- list("syn52069274", "syn52069273") #Gold Standard files
-#metrics_lookup <- list(c("nrmse_score", "spearman_score"), 
+metrics_lookup <- list(c("Participant_ID", "Disease_Name")) #, 
                        #c("summed_score", "jaccard_similarity"))
 
 
