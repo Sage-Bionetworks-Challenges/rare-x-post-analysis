@@ -201,8 +201,8 @@ get_scores <- function(syn, sub_df, query) {
       )
     
     #join dataframes to get accuracy and rank
-    full_df <- merge(x = base_df, y = score_df, by = "id")
-    return(score_df)
+    full_df <- merge(x = base_df, y = score_df)
+    return(full_df)
   }) %>% bind_rows()
   }
 }
