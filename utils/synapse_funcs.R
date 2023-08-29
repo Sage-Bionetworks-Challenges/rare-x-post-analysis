@@ -140,37 +140,36 @@ copy_model <- function(image, project_id, name, tag = "latest") {
 
 get_ranked_submissions <- function(syn, query) {
 
-  # download the submissions ordered by overall rank
+  # download the submissions ordered by accuracy rank
   sub_df <- syn$tableQuery(query)$asDataFrame() %>%
     mutate(across(everything(), as.character),
-           team = as.character(sapply(submitterid, get_name, syn = syn)))
+           team = as.character(sapply(submitterid, get_name, syn = syn))) %>%
+    arrange(desc(accuracy))
   return(sub_df)
 }
 
 
-# Retrieving scores from submission view table --------------------------
+# Retrieving predictions from submission view table --------------------------
 get_scores <- function(syn, sub_df) {
   # validate if any valid submission to prevent from failing
   stopifnot(nrow(sub_df) > 0)
+  stopifnot("prediction_fileid" %in% colnames(sub_df))
 
-  #score_id <- colnames(sub_df)
-  # create df with the accuracy and submitter ids grouped by the submitter id to determine max accuracy
-  
-  score_id <- sub_df[, c("id", "team", "submitterid", "accuracy", "dockerrepositoryname", "dockerdigest", "admin_folder", "prediction_fileid")] %>%
-  arrange(desc(accuracy))
-#   group_by(submitterid) %>%
-#   arrange(submitterid, accuracy) %>%
-#   )
-  
-  # get the top accuracy results and remove all others
-  #score_id <- score_id[score_id$accuracy == score_id$overall_rank, ] #%>%
-  #distinct() %>%
-  #arrange(desc(overall_rank))
+  # read all valid predictions
+  all_scores <- lapply(1:nrow(sub_df), function(sub_n) {
+    score_id <- sub_df$prediction_fileid[sub_n]
 
-  #remove unneccesary columns
-  #score_id <- score_id %>% select(-(accuracy))
+    # read all test case scores for each submission
+    score_df <- syn$get(score_id)$path %>%
+      data.table::fread(data.table = FALSE, verbose = FALSE) %>%
+      mutate(
+        id = sub_df$id[sub_n],
+        submitterid = sub_df$submitterid[sub_n],
+        team = sub_df$team[sub_n]
+      )
+    return(score_df)
+  }) %>% bind_rows()
 
-  return(score_id)
 }
 
 
