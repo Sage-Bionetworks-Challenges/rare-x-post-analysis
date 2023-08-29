@@ -29,12 +29,10 @@ for (n in 1:nrow(sub_df)) {
   message("Retrieving prediction files from ", team, " ...")
   message("------------------------------------------")
   
-  if (!dir.exists(pred_dir)) {
-    pred_path <- syn$get(pred_id)$path
-    dir.create(pred_dir, showWarnings = FALSE, recursive = TRUE)
-    untar(pred_path, exdir = pred_dir, verbose = TRUE)
-    unlink(pred_path) # remove cache to save space
-  }
-  
-  message("Done {n}/{nrow(sub_df)}")
+  pred_path <- syn$get(pred_id, downloadLocation=pred_dir)
+  dir.create(pred_dir, showWarnings = FALSE, recursive = TRUE)
+  pred_path
+  unlink(pred_path) # remove cache to save space
+
+  message("Done ", round(n/nrow(sub_df), 2))
 }
