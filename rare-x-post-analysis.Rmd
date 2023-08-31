@@ -24,10 +24,8 @@ suppressPackageStartupMessages(library(knitr))
 suppressPackageStartupMessages(library(readr))
 suppressPackageStartupMessages(library(reticulate))
 suppressPackageStartupMessages(library(rcompanion))
-#path_to_python <- "/Users/mdiaz/.virtualenvs/r-reticulate/bin/python"
-#reticulate::use_python(path_to_python)
 
-#reticulate::use_condaenv('synapse')
+reticulate::use_condaenv('synapse')
 synapseclient <- reticulate::import('synapseclient')
 syn <- synapseclient$Synapse()
 syn$login(silent = TRUE)
