@@ -89,6 +89,7 @@ query <- syn$tableQuery(
     status = 'ACCEPTED'
     AND submission_status = 'SCORED'
     AND accuracy IS NOT NULL
+    AND id <> 9738335
     GROUP BY submitterid,prediction_fileid
     ORDER BY MAX(accuracy) DESC
   ")$asDataFrame()
@@ -183,7 +184,7 @@ bayes <- computeBayesFactor(boot, refPredIndex = 1, invertBayes = FALSE) %>%
 One of the requirements to being a top-performer is that it must do better than the baseline - it cannot be tied.  To analyze this, we will now use the baseline model as the reference prediction when computing the Bayes factor. You will need to view your bayes output in the cell above to determine the numeric value of the refPredIndex variable. Enter the index of the row in the bayes output that represents your baseline model.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-bayes.ref <- computeBayesFactor(boot, refPredIndex = 7, invertBayes = FALSE) %>%
+bayes.ref <- computeBayesFactor(boot, refPredIndex = 6, invertBayes = FALSE) %>%
   as_tibble(rownames = "submission") %>%
   rename(bayes = value)
 ```
