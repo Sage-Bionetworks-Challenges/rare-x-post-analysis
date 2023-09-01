@@ -197,14 +197,14 @@ plot.auc <- boot %>%
   tidyr::gather(submission, bs_score) %>%
   left_join(bayes) %>%
   mutate(submission = case_when(
-    submission == "Preterm Birth - Vaginal Microbiome Organizers" ~ "Challenge Organizers",
-    submission == "Aagaard Lab - Baylor College of Medicine - Texas Childrens Hospital " ~ "Aagaard Lab - BCM - Texas Childrens",
-    submission == "Benos Team for DREAM challenge on Preterm Birth" ~ "Benos Team",
+    submission == "mdsage1" ~ "Challenge Organizers",
+    #submission == "Aagaard Lab - Baylor College of Medicine - Texas Childrens Hospital " ~ "Aagaard Lab - BCM - Texas Childrens",
+    #submission == "Benos Team for DREAM challenge on Preterm Birth" ~ "Benos Team",
     TRUE ~ submission
  )) %>%
   mutate(bayes_category=case_when(
-    submission == "Challenge Organizers" ~ "Baseline Model",
-    submission == "AI4knowledgeLAB" ~ "Top Performers",
+    submission == "mdsage1" ~ "Baseline Model",
+    submission == "DNAmbit" ~ "Top Performers",
     bayes == 0 ~ "Top Performers",
     bayes <= 20 ~ "Bayes Factor ≤20",
     bayes >= 20 ~ "Bayes Factor >20")) %>%
@@ -222,7 +222,7 @@ plot.auc <- boot %>%
     "Baseline Model" = "#C74EDA"),
     name = NULL) +
   coord_flip() +
-  labs(x="Team", y="Bootstrapped AUC-ROC\n(n=1000)") +
+  labs(x="Team", y="Bootstrapped Accuracy\n(n=1000)") +
   theme(
     axis.text.y.left = element_text(size = 19),
     axis.text.x.bottom = element_text(size = 18),
@@ -233,8 +233,8 @@ plot.auc <- boot %>%
 
 plot.bayes.top <- bayes %>% 
   mutate(bayes_category=case_when(
-    submission == "Preterm Birth - Vaginal Microbiome Organizers" ~ "Baseline Model",
-    submission == "AI4knowledgeLAB" ~ "Top Performer",
+    submission == "mdsage1" ~ "Baseline Model",
+    submission == "DNAmbit" ~ "Top Performer",
     bayes == 0 ~ "Top Performer",
     bayes <= 20 ~ "Bayes Factor ≤20",
     bayes >= 20 ~ "Bayes Factor >20")) %>% 
@@ -254,7 +254,7 @@ plot.bayes.top <- bayes %>%
     axis.text.x.bottom = element_text(size = 18),
     axis.title.y=element_blank(), 
     axis.text.y=element_blank()) + 
-  labs(y="Bayes Factor\n(Top Performer=UWisc-Madison)")
+  labs(y="Bayes Factor\n(Top Performer=DNAmbit)")
 
 plot.bayes.ref <- bayes.ref %>% 
   mutate(bayes_category=case_when(
