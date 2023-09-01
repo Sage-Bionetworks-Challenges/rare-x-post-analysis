@@ -22,10 +22,10 @@ suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(yardstick))
 suppressPackageStartupMessages(library(knitr))
 suppressPackageStartupMessages(library(readr))
-suppressPackageStartupMessages(library(reticulate))
+suppressPackageStartupMessages(library(caret))
 suppressPackageStartupMessages(library(rcompanion))
 
-reticulate::use_condaenv('synapse')
+#reticulate::use_condaenv('synapse')
 synapseclient <- reticulate::import('synapseclient')
 syn <- synapseclient$Synapse()
 syn$login(silent = TRUE)
@@ -70,55 +70,58 @@ computeBayesFactor <- function(bootstrapMetricMatrix,
 ```
 
 #### Goldstandard Files
+Indicate 1 as the validation column value since all values are correct.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 gold <- read_tsv(syn$get("syn52069273")$path)
-#gold$validation <- factor(gold$was_preterm, levels=c(1,0))
+gold$validation <- as.factor(1)
 head(gold)
 ```
 #### Prediction Files
 
 Participants are allowed 1 scored submissions, where we will only consider the best-performing one for final evaluation. Establishing a rank for each submission.
 
+AND a.prediction_fileid == b.prediction_fileid
+    GROUP BY submitterid, accuracy
+    ORDER BY accuracy
+
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 query <- syn$tableQuery(
   "SELECT
-    id,
     submitterid,
-    MAX(accuracy) AS accuracy,
+    accuracy,
     prediction_fileid
   FROM syn52141680
   WHERE
     status = 'ACCEPTED'
     AND submission_status = 'SCORED'
     AND accuracy IS NOT NULL
-  GROUP BY submitterid
-  ORDER BY accuracy")$asDataFrame()
+    GROUP BY submitterid,prediction_fileid
+    ORDER BY MAX(accuracy) DESC
+  ")$asDataFrame()
+
+query <- query %>%
+  distinct(submitterid, .keep_all = TRUE)
 
 # Replace IDs with usernames/team names.
 query$submitterid <- as.character(query$submitterid)
 team_names <- sapply(query$submitterid, function(sub) {
   get_name(sub)
 })
-query$submitterid <- team_names 
 
+query$submitterid <- team_names 
 # Drop row.names for easier table reading.
 row.names(query) <- NULL
 
-# Order the rows by highest accuracy
-query <- query %>%
-  arrange(desc(accuracy))
-
-# add primary rank column for future Bayes analysis
-query$primary_rank = seq(1, by = 1, length.out = nrow(query))
-
 kable(query)
+
 ```
 ## Bootstrap Submissions
 
 Next, we read in the predictions files and combine them together (with the goldstandard) into a single data frame. This will make bootstrapping easier.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
+
 pred_filenames <- lapply(query$prediction_fileid, function(id){
   syn$get(id)$path
 })
@@ -136,6 +139,8 @@ submissions <- lapply(names(pred_filenames), function(team) {
 
 kable(head(submissions))
 ```
+
+
 
 Now we will bootstrap the predictions and the goldstandard 1 time to confirm that the results are as expected. The scoring function is taken directly from the original score code and has been rewritten in R.
 
@@ -159,15 +164,31 @@ Now we will bootstrap the predictions and the goldstandard 1000 times.  This wil
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 N <- 1 #000
 
-bs_indices <- matrix(1:nrow(gold), nrow(gold), N) %>%
-  apply(2, sample, replace = TRUE)
+bs_indices <- matrix(1:nrow(gold), nrow(gold), N) 
 
-boot <- sapply(names(pred_filenames), function(team){
+
+#golden
+boot <- sapply(names(append(pred_filenames,'gold')), function(team){
+  new_col <- "pred_"
+  pred_filenames
   apply(bs_indices, 2, function(ind) {
-    acc <- sum(submissions$gold == submissions[[team]]) / nrow(gold)
-    acc
+    submissions$gold[ind]
+    # add binary prediction values 1== CORRECT
+    final_col <- paste(new_col, team)
+    #names(pred_filenames) <- final_col
+    #team
+    as.factor(ifelse(submissions['gold'] == submissions[[team]][ind], 1, 0))
+    accuracy_vec(factor(submissions['validation']),factor(ifelse(submissions['gold'] == submissions[[team]][ind], 1, 0)))
+    #sum(submissions['gold'] == submissions[[team]][ind]) / sum(submissions['validation'] == 1)
+    #final <- submissions[[team]][ind]
+    #return(final)
+    #submissions['validation']
+    #confusionMatrix(submissions$validation,final)
   })
+  #submissions$team
+  
 })
+#submissions$team
 ```
 
 ```{r echo=TRUE}
