@@ -25,7 +25,6 @@ suppressPackageStartupMessages(library(readr))
 suppressPackageStartupMessages(library(caret))
 suppressPackageStartupMessages(library(rcompanion))
 
-#reticulate::use_condaenv('synapse')
 synapseclient <- reticulate::import('synapseclient')
 syn <- synapseclient$Synapse()
 syn$login(silent = TRUE)
@@ -70,20 +69,14 @@ computeBayesFactor <- function(bootstrapMetricMatrix,
 ```
 
 #### Goldstandard Files
-Indicate 1 as the validation column value since all values are correct.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-gold <- read_tsv(syn$get("syn52069273")$path)
-gold$validation <- as.factor(1)
+gold <- read_tsv(syn$get("syn52069274")$path)
 head(gold)
 ```
 #### Prediction Files
 
 Participants are allowed 1 scored submissions, where we will only consider the best-performing one for final evaluation. Establishing a rank for each submission.
-
-AND a.prediction_fileid == b.prediction_fileid
-    GROUP BY submitterid, accuracy
-    ORDER BY accuracy
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 query <- syn$tableQuery(
@@ -141,76 +134,56 @@ kable(head(submissions))
 ```
 
 
-
-Now we will bootstrap the predictions and the goldstandard 1 time to confirm that the results are as expected. The scoring function is taken directly from the original score code and has been rewritten in R.
+Now we will bootstrap the predictions and the goldstandard 1 time to confirm that the results are as expected. The scoring function is taken directly from the original score code and has been rewritten in R. We only have 1 iteration so we will not use a sampling technique until we run this with many iterations.
 
 ```{r echo=TRUE}
-#N <- 1
-#bs_indices <- matrix(1:nrow(gold), nrow(gold), N) %>%
-  #apply(2, sample, replace = TRUE)
+N <- 1
+bs_indices <- matrix(1:nrow(gold), nrow(gold), N)
 
-#boot_test <- sapply(names(pred_filenames), function(team){
-  #apply(bs_indices, 2, function(ind) {
-    #sum(submissions$gold == submissions[[team]]) / nrow(gold)
-  #})
-#})
+boot_test <- sapply(names(pred_filenames), function(team){
+  apply(bs_indices, 2, function(ind) {
+    sum(ifelse(submissions$gold[ind] == submissions[[team]][ind], 1, 0)) / length(submissions[[team]][ind])
+  })
+
+})
 ```
 
 ```{r}
-#boot_test
+boot_test
 ```
 Now we will bootstrap the predictions and the goldstandard 1000 times.  This will produce a matrix of 1000 scores per submission.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-N <- 1 #000
+N <- 1000
+bs_indices <- matrix(1:nrow(gold), nrow(gold), N) %>%
+  apply(2, sample, replace = TRUE) 
 
-bs_indices <- matrix(1:nrow(gold), nrow(gold), N) 
-
-
-#golden
-boot <- sapply(names(append(pred_filenames,'gold')), function(team){
-  new_col <- "pred_"
-  pred_filenames
+boot <- sapply(names(pred_filenames), function(team){
   apply(bs_indices, 2, function(ind) {
-    submissions$gold[ind]
-    # add binary prediction values 1== CORRECT
-    final_col <- paste(new_col, team)
-    #names(pred_filenames) <- final_col
-    #team
-    as.factor(ifelse(submissions['gold'] == submissions[[team]][ind], 1, 0))
-    accuracy_vec(factor(submissions['validation']),factor(ifelse(submissions['gold'] == submissions[[team]][ind], 1, 0)))
-    #sum(submissions['gold'] == submissions[[team]][ind]) / sum(submissions['validation'] == 1)
-    #final <- submissions[[team]][ind]
-    #return(final)
-    #submissions['validation']
-    #confusionMatrix(submissions$validation,final)
+    sum(ifelse(submissions$gold[ind] == submissions[[team]][ind], 1, 0)) / length(submissions[[team]][ind])
   })
-  #submissions$team
-  
+
 })
-#submissions$team
+
 ```
 
-```{r echo=TRUE}
-boot
-```
 
 ## Compute and Plot Bayes Factor
 
 For this analysis, we will use the top-performing model as the reference prediction. As a reminder, we will use a Bayes factor of 3 as a cutoff to indicate a tie.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-bayes <- computeBayesFactor(boot, refPredIndex = 2, invertBayes = FALSE) %>%
+bayes <- computeBayesFactor(boot, refPredIndex = 1, invertBayes = FALSE) %>%
   as_tibble(rownames = "submission") %>%
   rename(bayes = value)
 ```
 
 ## Comparing Models to the Baseline 
 
-One of the requirements to being a top-performer is that it must do better than the baseline - it cannot be tied.  To analyze this, we will now use the baseline model as the reference prediction when computing the Bayes factor.
+One of the requirements to being a top-performer is that it must do better than the baseline - it cannot be tied.  To analyze this, we will now use the baseline model as the reference prediction when computing the Bayes factor. You will need to view your bayes output in the cell above to determine the numeric value of the refPredIndex variable. Enter the index of the row in the bayes output that represents your baseline model.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-bayes.ref <- computeBayesFactor(boot, refPredIndex = 29, invertBayes = FALSE) %>%
+bayes.ref <- computeBayesFactor(boot, refPredIndex = 7, invertBayes = FALSE) %>%
   as_tibble(rownames = "submission") %>%
   rename(bayes = value)
 ```
